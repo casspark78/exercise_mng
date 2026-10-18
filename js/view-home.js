@@ -1,8 +1,9 @@
 import { getState, getList, getBackupStatus, latestWeight, exerciseKcal } from './state.js';
-import { morningStreak, weekSummary, dailyTotals, exerciseRowHtml, openExerciseForm } from './view-exercise.js';
+import { morningStreak, dailyTotals, exerciseRowHtml, openExerciseForm } from './view-exercise.js';
 import { openWeightForm, weightChange } from './view-weight.js';
 import { openBpForm, classifyBp } from './view-bp.js';
-import { todayStr, formatDateKr, addDays, diffDays, dateToStr, formatMinutes, strToDate } from './utils.js';
+import { exerciseLabel as findTypeLabel } from './met.js';
+import { todayStr, formatDateKr, diffDays, dateToStr, formatMinutes, strToDate } from './utils.js';
 
 export function renderHome(container, { goToTab, openSettings }) {
   const today = todayStr();
@@ -13,7 +14,6 @@ export function renderHome(container, { goToTab, openSettings }) {
   const goal = Number(profile.dailyKcalGoal) || 0;
   const pct = goal ? Math.min(100, Math.round((todayKcal / goal) * 100)) : 0;
   const streak = morningStreak();
-  const week = weekSummary();
   const lw = latestWeight();
   const wChange = weightChange(7);
   const lastBp = getList('bps')[0];
@@ -23,26 +23,22 @@ export function renderHome(container, { goToTab, openSettings }) {
     ${backupBannerHtml()}
 
     <div class="hero-card">
-      <div class="hero-top">
-        <div>
-          <div class="hero-date">${formatDateKr(today)}</div>
-          <div class="hero-title">${todayList.length ? '오늘도 운동 완료! 💪' : greeting()}</div>
+      <div class="hero-row">
+        ${ringSvg(pct)}
+        <div class="ring-info">
+          <div class="hero-date">${formatDateKr(today)} · ${todayList.length ? '운동 완료 💪' : greeting()}</div>
+          <div class="big">${todayKcal.toLocaleString()}<small> kcal</small></div>
+          <div class="sub">${goal ? `목표 ${goal.toLocaleString()} · ` : ''}${todayMin ? `${formatMinutes(todayMin)} 운동` : '아직 기록 없음'}</div>
         </div>
         <div class="streak ${streak ? 'on' : ''}">
           <div class="n">🔥 ${streak}</div>
-          <div class="l">아침 연속</div>
-        </div>
-      </div>
-      <div class="ring-row">
-        ${ringSvg(pct)}
-        <div class="ring-info">
-          <div class="big">${todayKcal.toLocaleString()}<small> kcal</small></div>
-          <div class="sub">${goal ? `목표 ${goal.toLocaleString()} kcal · ${pct}%` : '오늘 소모 칼로리'}</div>
-          <div class="sub">${todayMin ? `${formatMinutes(todayMin)} 운동` : '아직 운동 기록이 없어요'}</div>
+          <div class="l">연속</div>
         </div>
       </div>
       <button class="btn btn-primary btn-block" id="quick-exercise">+ 오늘 운동 기록하기</button>
     </div>
+
+    <div class="card heatmap-card" id="heatmap-card">${heatmapHtml(goal)}</div>
 
     <div class="quick-grid">
       <button class="quick-tile" id="quick-weight">
@@ -58,21 +54,12 @@ export function renderHome(container, { goToTab, openSettings }) {
     </div>
     ${reminderHtml(lw, lastBp)}
 
-    <div class="section-title">이번 주 아침 운동</div>
-    <div class="card">
-      ${weekDotsHtml()}
-      <div class="week-sum">
-        <span><b>${week.days}</b>일 운동</span>
-        <span><b>${week.kcal.toLocaleString()}</b> kcal</span>
-        <span><b>${formatMinutes(week.minutes)}</b></span>
-      </div>
-    </div>
-
     ${todayList.length ? `
       <div class="section-title">오늘 운동 <a class="action-link" id="go-exercise">전체 보기 ›</a></div>
       <div class="card list-card">${todayList.map(exerciseRowHtml).join('')}</div>` : ''}
   `;
 
+  bindHeatmap(container.querySelector('#heatmap-card'), goal);
   container.querySelector('#backup-banner')?.addEventListener('click', openSettings);
   container.querySelector('#quick-exercise').addEventListener('click', () => openExerciseForm());
   container.querySelector('#quick-weight').addEventListener('click', () => openWeightForm());
@@ -101,28 +88,98 @@ function relDay(dateStr) {
 }
 
 function ringSvg(pct) {
-  const r = 34;
+  const r = 26;
   const c = 2 * Math.PI * r;
   return `
-    <svg class="ring" viewBox="0 0 84 84">
-      <circle cx="42" cy="42" r="${r}" class="ring-bg"/>
-      <circle cx="42" cy="42" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct / 100)}" transform="rotate(-90 42 42)"/>
-      <text x="42" y="47" text-anchor="middle" class="ring-text">${pct}%</text>
+    <svg class="ring" viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r="${r}" class="ring-bg"/>
+      <circle cx="32" cy="32" r="${r}" class="ring-fg" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct / 100)}" transform="rotate(-90 32 32)"/>
+      <text x="32" y="36.5" text-anchor="middle" class="ring-text">${pct}%</text>
     </svg>`;
 }
 
-function weekDotsHtml() {
+/* ---------- Monthly heatmap ---------- */
+
+let monthOffset = 0;
+let selectedDate = null;
+
+/** 0 = no workout, 1..4 = share of the daily kcal goal (<50%, <100%, <150%, ≥150%). */
+function heatLevel(kcal, goal) {
+  if (!kcal) return 0;
+  const g = goal || 300;
+  if (kcal < g * 0.5) return 1;
+  if (kcal < g) return 2;
+  if (kcal < g * 1.5) return 3;
+  return 4;
+}
+
+function heatmapHtml(goal) {
   const totals = dailyTotals();
   const today = todayStr();
-  const start = addDays(today, -((strToDate(today).getDay() + 6) % 7));
-  const names = ['월', '화', '수', '목', '금', '토', '일'];
-  return `<div class="week-dots">${names.map((n, i) => {
-    const d = addDays(start, i);
-    const t = totals[d];
-    const state = t?.morning ? 'morning' : t ? 'done' : d > today ? 'future' : '';
-    return `<div class="wd ${state}${d === today ? ' today' : ''}"><div class="dot">${t?.morning ? '☀️' : t ? '✓' : ''}</div><div class="n">${n}</div></div>`;
-  }).join('')}</div>
-  <div class="desc" style="text-align:center;margin-top:6px;">☀️ 운동한 날</div>`;
+  const now = strToDate(today);
+  const first = new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+  const y = first.getFullYear();
+  const m = first.getMonth();
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; // Monday-first
+
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push('<div class="hm-cell blank"></div>');
+  const sum = { days: 0, kcal: 0, minutes: 0 };
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = dateToStr(new Date(y, m, d));
+    const t = totals[ds];
+    if (t) { sum.days++; sum.kcal += t.kcal; sum.minutes += t.minutes; }
+    const lv = heatLevel(t?.kcal, goal);
+    const cls = ['hm-cell', `lv${lv}`, ds === today ? 'today' : '', ds > today ? 'future' : '', ds === selectedDate ? 'selected' : ''].filter(Boolean).join(' ');
+    cells.push(`<button type="button" class="${cls}" data-date="${ds}" ${ds > today ? 'disabled' : ''}><span>${d}</span></button>`);
+  }
+
+  const elapsed = monthOffset === 0 ? now.getDate() : daysInMonth;
+  const rate = elapsed ? Math.round((sum.days / elapsed) * 100) : 0;
+
+  let detail = '날짜를 누르면 그날 운동을 볼 수 있어요';
+  if (selectedDate) {
+    const t = totals[selectedDate];
+    const names = getList('exercises').filter((e) => e.date === selectedDate).map((e) => findTypeLabel(e));
+    detail = t
+      ? `<b>${formatDateKr(selectedDate)}</b> · ${t.kcal.toLocaleString()} kcal · ${names.join(', ')}`
+      : `<b>${formatDateKr(selectedDate)}</b> · 운동 기록 없음`;
+  }
+
+  return `
+    <div class="hm-head">
+      <button type="button" class="hm-nav" data-nav="-1" aria-label="이전 달">‹</button>
+      <div class="hm-title">${y}년 ${m + 1}월 운동</div>
+      <button type="button" class="hm-nav" data-nav="1" aria-label="다음 달" ${monthOffset >= 0 ? 'disabled' : ''}>›</button>
+    </div>
+    <div class="hm-grid hm-weekdays">${['월', '화', '수', '목', '금', '토', '일'].map((n) => `<div>${n}</div>`).join('')}</div>
+    <div class="hm-grid">${cells.join('')}</div>
+    <div class="hm-legend">
+      <span>적음</span>${[0, 1, 2, 3, 4].map((l) => `<i class="hm-cell lv${l}"></i>`).join('')}<span>많음</span>
+    </div>
+    <div class="hm-detail">${detail}</div>
+    <div class="week-sum">
+      <span><b>${sum.days}</b>일 운동 <small>(${rate}%)</small></span>
+      <span><b>${sum.kcal.toLocaleString()}</b> kcal</span>
+      <span><b>${formatMinutes(sum.minutes)}</b></span>
+    </div>`;
+}
+
+function bindHeatmap(card, goal) {
+  card.addEventListener('click', (ev) => {
+    const nav = ev.target.closest('[data-nav]');
+    const cell = ev.target.closest('.hm-cell[data-date]');
+    if (nav && !nav.disabled) {
+      monthOffset = Math.min(0, monthOffset + Number(nav.dataset.nav));
+      selectedDate = null;
+    } else if (cell && !cell.disabled) {
+      selectedDate = selectedDate === cell.dataset.date ? null : cell.dataset.date;
+    } else {
+      return;
+    }
+    card.innerHTML = heatmapHtml(goal);
+  });
 }
 
 function reminderHtml(lw, lastBp) {
