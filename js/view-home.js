@@ -1,6 +1,6 @@
 import { getState, getList, getBackupStatus, latestWeight, exerciseKcal } from './state.js';
 import { morningStreak, dailyTotals, dayItemsHtml } from './view-exercise.js';
-import { openDayForm } from './exercise-form.js';
+import { openDayForm, lastWorkoutDate } from './exercise-form.js';
 import { openWeightForm, weightChange } from './view-weight.js';
 import { openBpForm, classifyBp } from './view-bp.js';
 import { todayStr, formatDateKr, diffDays, dateToStr, formatMinutes, strToDate } from './utils.js';
@@ -9,6 +9,7 @@ export function renderHome(container, { openSettings }) {
   const today = todayStr();
   const { profile } = getState().settings;
   const todayList = getList('exercises').filter((e) => e.date === today);
+  const lastDay = lastWorkoutDate(today);
   const todayKcal = todayList.reduce((s, e) => s + exerciseKcal(e), 0);
   const todayMin = todayList.reduce((s, e) => s + (Number(e.durationMin) || 0), 0);
   const goal = Number(profile.dailyKcalGoal) || 0;
@@ -34,7 +35,10 @@ export function renderHome(container, { openSettings }) {
           <div class="l">연속</div>
         </div>
       </div>
-      <button class="btn btn-primary btn-block" id="quick-exercise">${todayList.length ? '✏️ 오늘 운동 기록 수정' : '+ 오늘 운동 기록하기'}</button>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="quick-exercise">${todayList.length ? '✏️ 오늘 운동 기록 수정' : '+ 오늘 운동 기록하기'}</button>
+        ${!todayList.length && lastDay ? '<button class="btn btn-copy" id="quick-copy">↺ 지난번과 똑같이</button>' : ''}
+      </div>
     </div>
 
     <div class="card heatmap-card" id="heatmap-card">${heatmapHtml(goal)}</div>
@@ -59,6 +63,7 @@ export function renderHome(container, { openSettings }) {
   bindHeatmap(container.querySelector('#heatmap-card'), goal);
   container.querySelector('#backup-banner')?.addEventListener('click', openSettings);
   container.querySelector('#quick-exercise').addEventListener('click', () => openDayForm(today));
+  container.querySelector('#quick-copy')?.addEventListener('click', () => openDayForm(today, { copyFrom: lastDay }));
   container.querySelector('#quick-weight').addEventListener('click', () => openWeightForm());
   container.querySelector('#quick-bp').addEventListener('click', () => openBpForm());
 }

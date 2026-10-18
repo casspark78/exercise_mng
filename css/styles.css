@@ -296,6 +296,11 @@ button, input, select, textarea {
 .ring-info .sub { font-size: 12px; font-weight: 600; opacity: 0.88; }
 
 .hero-card .btn { padding: 10px 14px; }
+.hero-actions { display: flex; gap: 8px; }
+.hero-actions .btn { flex: 1; white-space: nowrap; }
+.hero-card .btn-copy { background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.45); }
+.copy-last { margin-top: 10px; padding: 11px; font-size: 14px; }
+.copy-last small { font-weight: 600; color: var(--text-secondary); }
 .hero-card .btn-primary { background: #fff; color: var(--primary-dark); }
 
 .quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
