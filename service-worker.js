@@ -1,4 +1,4 @@
-const CACHE_NAME = 'health-log-v1';
+const CACHE_NAME = 'health-log-v2';
 const APP_SHELL = [
   './',
   './index.html',
