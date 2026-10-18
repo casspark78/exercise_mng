@@ -329,12 +329,12 @@ button, input, select, textarea {
   cursor: pointer;
 }
 .hm-nav:disabled { opacity: 0.3; cursor: default; }
-.hm-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
-.hm-weekdays { margin-bottom: 5px; }
+.hm-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.hm-weekdays { margin-bottom: 4px; }
 .hm-weekdays div { text-align: center; font-size: 11px; font-weight: 700; color: var(--text-tertiary); }
 .hm-cell {
-  aspect-ratio: 1;
-  border-radius: 7px;
+  height: 26px;
+  border-radius: 5px;
   border: none;
   padding: 0;
   background: var(--heat-0);
@@ -344,8 +344,10 @@ button, input, select, textarea {
 }
 .hm-cell span {
   position: absolute;
-  top: 4px;
-  left: 5px;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 10px;
   font-weight: 700;
   color: var(--text-tertiary);
@@ -372,17 +374,36 @@ button, input, select, textarea {
 }
 .hm-legend i { display: inline-block; width: 12px; height: 12px; aspect-ratio: auto; border-radius: 3px; cursor: default; }
 .hm-legend span { margin: 0 2px; }
-.hm-detail {
-  margin-top: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  min-height: 18px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.hm-detail { margin-top: 10px; }
+.hm-detail.open {
+  background: var(--bg-input);
+  border-radius: var(--radius-md);
+  padding: 12px 14px 4px;
 }
-.hm-detail b { color: var(--text-primary); }
+.hm-hint { font-size: 12px; font-weight: 600; color: var(--text-tertiary); padding-bottom: 8px; }
+.hm-detail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+}
+.hm-detail-head b { font-size: 16px; font-weight: 800; }
+.hm-detail-head span { display: block; font-size: 13px; font-weight: 700; color: var(--primary); margin-top: 2px; }
+.hm-edit {
+  border: none;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hm-detail-list .list-row { cursor: default; }
+.hm-detail-list .row-icon { background: var(--bg-card); }
+.hm-detail-list .day-memo { border-top-color: var(--border); }
 .week-sum small { color: var(--text-tertiary); font-weight: 600; }
 
 .tip-line, .goal-line {
