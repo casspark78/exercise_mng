@@ -836,5 +836,84 @@ button, input, select, textarea {
 }
 .add-set { padding: 10px; font-size: 14px; }
 
+/* Day workout sheet */
+.ex-sections { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.ex-section {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  overflow: hidden;
+}
+.ex-section.on { border-color: var(--primary); background: rgba(61, 139, 253, 0.08); }
+.ex-sec-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.ex-sec-head .ti { font-size: 24px; }
+.ex-sec-head .tt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ex-sec-head .tn { font-size: 15px; font-weight: 800; }
+.ex-sec-head .tc { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+.ex-section.on .tn { color: var(--primary); }
+.ex-sec-kcal { font-size: 13px; font-weight: 800; color: var(--primary); white-space: nowrap; }
+.switch {
+  width: 44px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--border);
+  position: relative;
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+.switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+.ex-section.on .switch { background: var(--primary); }
+.ex-section.on .switch::after { transform: translateX(18px); }
+.ex-sec-body { display: none; padding: 0 12px 12px; }
+.ex-section.on .ex-sec-body { display: block; }
+.ex-sec-body .field-row { margin-top: 0; }
+.ex-sec-body .set-input { background: var(--bg-card); }
+
+.other-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.other-row select {
+  flex: 1.4;
+  min-width: 0;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-height: 44px;
+}
+.other-row .set-input { flex: 1; }
+
+.kcal-value b { font-size: 26px; font-weight: 800; }
+.day-memo {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--border);
+}
+.date-group { cursor: pointer; }
+
 .hidden { display: none !important; }
 .invisible { visibility: hidden; }

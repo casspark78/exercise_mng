@@ -58,8 +58,10 @@ const entryOverlay = () => document.getElementById('entry-modal-overlay');
 export function openEntrySheet(title, render) {
   const overlay = entryOverlay();
   document.getElementById('entry-modal-title').textContent = title;
-  const body = document.getElementById('entry-modal-body');
-  body.innerHTML = '';
+  // Swap in a fresh body so listeners delegated on it by a previous sheet don't pile up.
+  const oldBody = document.getElementById('entry-modal-body');
+  const body = oldBody.cloneNode(false);
+  oldBody.replaceWith(body);
   const close = () => closeModal(overlay);
   render(body, close);
   openModal(overlay);

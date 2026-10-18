@@ -1,4 +1,4 @@
-const CACHE_NAME = 'health-log-v4';
+const CACHE_NAME = 'health-log-v5';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './js/components.js',
   './js/view-home.js',
   './js/view-exercise.js',
+  './js/exercise-form.js',
   './js/view-weight.js',
   './js/view-bp.js',
   './icons/icon-192.png',
