@@ -3,7 +3,7 @@ import {
   openEntrySheet, toast, confirmAction, bindSegmented, rangePickerHtml, emptyStateHtml, showMoreHtml, PAGE_SIZE,
 } from './components.js';
 import { lineChart, movingAverage } from './charts.js';
-import { todayStr, nowTimeStr, formatDateKr, escapeHtml, addDays, round1 } from './utils.js';
+import { todayStr, formatDateKr, escapeHtml, addDays, round1 } from './utils.js';
 
 let range = '90';
 let shown = PAGE_SIZE;
@@ -117,7 +117,7 @@ function chartHtml(list, goal) {
 
 function rowHtml(w, prev) {
   const diff = prev ? round1(Number(w.kg) - Number(prev.kg)) : null;
-  const sub = [w.time, w.bodyFat ? `체지방 ${w.bodyFat}%` : '', w.memo].filter(Boolean).join(' · ');
+  const sub = [w.bodyFat ? `체지방 ${w.bodyFat}%` : '', w.memo].filter(Boolean).join(' · ');
   return `
     <div class="list-row" data-weight-id="${w.id}">
       <div class="info">
@@ -134,14 +134,11 @@ function rowHtml(w, prev) {
 export function openWeightForm(entry = null) {
   const isEdit = !!entry;
   const last = getList('weights')[0];
-  const e = entry || { date: todayStr(), time: nowTimeStr(), kg: last ? last.kg : getState().settings.profile.defaultWeightKg };
+  const e = entry || { date: todayStr(), kg: last ? last.kg : getState().settings.profile.defaultWeightKg };
 
   openEntrySheet(isEdit ? '체중 수정' : '체중 입력', (body, close) => {
     body.innerHTML = `
-      <div class="field-row">
-        <div class="field"><label>날짜</label><input type="date" id="w-date" value="${e.date}"></div>
-        <div class="field"><label>시간</label><input type="time" id="w-time" value="${e.time || ''}"></div>
-      </div>
+      <div class="field"><label>날짜</label><input type="date" id="w-date" value="${e.date}"></div>
       <div class="field-row">
         <div class="field"><label>체중 (kg)</label><input type="number" id="w-kg" inputmode="decimal" step="0.1" min="20" max="300" value="${e.kg ?? ''}"></div>
         <div class="field"><label>체지방률 (%, 선택)</label><input type="number" id="w-fat" inputmode="decimal" step="0.1" min="1" max="70" value="${e.bodyFat ?? ''}"></div>
@@ -163,7 +160,6 @@ export function openWeightForm(entry = null) {
         upsertEntry('weights', {
           ...(isEdit ? { id: e.id } : {}),
           date: $('#w-date').value,
-          time: $('#w-time').value,
           kg,
           bodyFat: Number($('#w-fat').value) || null,
           memo: $('#w-memo').value.trim(),

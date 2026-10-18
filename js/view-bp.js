@@ -3,7 +3,7 @@ import {
   openEntrySheet, toast, confirmAction, bindSegmented, rangePickerHtml, emptyStateHtml, showMoreHtml, PAGE_SIZE,
 } from './components.js';
 import { lineChart } from './charts.js';
-import { todayStr, nowTimeStr, formatDateKr, escapeHtml, avg } from './utils.js';
+import { todayStr, formatDateKr, escapeHtml, avg, addDays } from './utils.js';
 import { filterByRange } from './view-weight.js';
 
 let range = '90';
@@ -17,10 +17,6 @@ export function classifyBp(sys, dia) {
   if (sys >= 120) return { label: '주의혈압', cls: 'warn' };
   if (sys < 90 || dia < 60) return { label: '저혈압 주의', cls: 'warn' };
   return { label: '정상', cls: 'good' };
-}
-
-export function isMorningTime(time) {
-  return !!time && time < '12:00';
 }
 
 function averageOf(list) {
@@ -47,7 +43,7 @@ export function renderBp(container) {
     ${latest ? `
     <div class="card bp-latest">
       <div>
-        <div class="card-sub">최근 측정 · ${formatDateKr(latest.date)} ${latest.time || ''}</div>
+        <div class="card-sub">최근 측정 · ${formatDateKr(latest.date)}</div>
         <div class="bp-big">${latest.sys}<span>/</span>${latest.dia} <small>mmHg</small></div>
         ${latest.pulse ? `<div class="card-sub">맥박 ${latest.pulse} bpm</div>` : ''}
       </div>
@@ -61,7 +57,7 @@ export function renderBp(container) {
     </div>
 
     <div class="section-title">전체 기록 <span class="count">${list.length}건</span></div>
-    ${list.length ? `<div class="card list-card">${list.slice(0, shown).map(rowHtml).join('')}</div>${showMoreHtml(list.length, shown)}` : emptyStateHtml('🩺', '혈압을 정기적으로 입력하면<br>트렌드와 평균을 확인할 수 있어요.<br><small>아침(기상 후 1시간 이내)·저녁(취침 전) 측정을 권장해요.</small>')}
+    ${list.length ? `<div class="card list-card">${list.slice(0, shown).map(rowHtml).join('')}</div>${showMoreHtml(list.length, shown)}` : emptyStateHtml('🩺', '혈압을 정기적으로 입력하면<br>트렌드와 평균을 확인할 수 있어요.<br><small>매일 비슷한 시간에 측정하면 비교하기 좋아요.</small>')}
   `;
 
   container.querySelector('#add-bp-btn').addEventListener('click', () => openBpForm());
@@ -103,22 +99,23 @@ function chartHtml(list) {
   ];
 
   const all = averageOf(inRange);
-  const morning = averageOf(inRange.filter((b) => isMorningTime(b.time)));
-  const evening = averageOf(inRange.filter((b) => b.time && !isMorningTime(b.time)));
+  const recent = averageOf(list.filter((b) => b.date > addDays(todayStr(), -7)));
+  const highest = inRange.reduce((m, b) => (!m || Number(b.sys) > Number(m.sys) ? b : m), null);
+  const peak = highest ? { sys: Number(highest.sys), dia: Number(highest.dia), count: 1 } : null;
   const avgCell = (title, a) => {
     if (!a) return `<div class="avg-cell"><div class="t">${title}</div><div class="v">-</div></div>`;
     const c = classifyBp(a.sys, a.dia);
-    return `<div class="avg-cell"><div class="t">${title} <small>(${a.count}회)</small></div><div class="v ${c.cls}">${a.sys}/${a.dia}</div></div>`;
+    return `<div class="avg-cell"><div class="t">${title}${a.count > 1 ? ` <small>(${a.count}회)</small>` : ""}</div><div class="v ${c.cls}">${a.sys}/${a.dia}</div></div>`;
   };
 
   return `${lineChart({ series, refLines, yPad: 5, unit: '' })}
-    <div class="avg-grid">${avgCell('기간 평균', all)}${avgCell('아침 평균', morning)}${avgCell('저녁 평균', evening)}</div>
+    <div class="avg-grid">${avgCell('기간 평균', all)}${avgCell('최근 7일', recent)}${avgCell('기간 최고', peak)}</div>
     <div class="desc" style="margin-top:8px;">가정혈압 기준 135/85 mmHg 이상이면 고혈압으로 봅니다. 진단·치료는 의사와 상담하세요.</div>`;
 }
 
 function rowHtml(b) {
   const c = classifyBp(Number(b.sys), Number(b.dia));
-  const sub = [b.time, b.arm ? `${b.arm === 'L' ? '왼팔' : '오른팔'}` : '', b.memo].filter(Boolean).join(' · ');
+  const sub = [b.arm ? `${b.arm === 'L' ? '왼팔' : '오른팔'}` : '', b.memo].filter(Boolean).join(' · ');
   return `
     <div class="list-row" data-bp-id="${b.id}">
       <div class="info">
@@ -134,14 +131,11 @@ function rowHtml(b) {
 
 export function openBpForm(entry = null) {
   const isEdit = !!entry;
-  const e = entry || { date: todayStr(), time: nowTimeStr() };
+  const e = entry || { date: todayStr() };
 
   openEntrySheet(isEdit ? '혈압 수정' : '혈압 입력', (body, close) => {
     body.innerHTML = `
-      <div class="field-row">
-        <div class="field"><label>날짜</label><input type="date" id="bp-date" value="${e.date}"></div>
-        <div class="field"><label>시간</label><input type="time" id="bp-time" value="${e.time || ''}"></div>
-      </div>
+      <div class="field"><label>날짜</label><input type="date" id="bp-date" value="${e.date}"></div>
       <div class="field-row three">
         <div class="field"><label>수축기 (최고)</label><input type="number" id="bp-sys" inputmode="numeric" min="50" max="260" placeholder="120" value="${e.sys ?? ''}"></div>
         <div class="field"><label>이완기 (최저)</label><input type="number" id="bp-dia" inputmode="numeric" min="30" max="160" placeholder="80" value="${e.dia ?? ''}"></div>
@@ -188,7 +182,6 @@ export function openBpForm(entry = null) {
         upsertEntry('bps', {
           ...(isEdit ? { id: e.id } : {}),
           date: $('#bp-date').value,
-          time: $('#bp-time').value,
           sys,
           dia,
           pulse: Number($('#bp-pulse').value) || null,
