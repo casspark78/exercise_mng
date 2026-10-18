@@ -73,7 +73,7 @@ export function renderExercise(container) {
     <div class="summary-grid">
       <div class="summary-tile"><div class="value">${week.kcal.toLocaleString()}</div><div class="label">이번 주 kcal</div></div>
       <div class="summary-tile"><div class="value neutral">${formatMinutes(week.minutes)}</div><div class="label">이번 주 운동시간</div></div>
-      <div class="summary-tile"><div class="value neutral">${week.morningDays}<small>/7</small></div><div class="label">이번 주 운동 일수</div></div>
+      <div class="summary-tile"><div class="value neutral">${week.days}</div><div class="label">이번 주 운동 일수</div></div>
     </div>
 
     <div class="card">
