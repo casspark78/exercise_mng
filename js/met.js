@@ -59,19 +59,19 @@ export function metFromSpeed(kmh) {
   return SPEED_MET[SPEED_MET.length - 1][1];
 }
 
-/** Rough time for a set-based workout when none is entered: ~2분 per set incl. rest. */
-export const MIN_PER_SET = 2;
-
-export function estimateSetMinutes(sets) {
-  return (sets?.length || 0) * MIN_PER_SET;
+/**
+ * Strength entries store a single total rep count (and weight). Records made
+ * while the form still had per-set rows carry `sets` instead, so read
+ * through these helpers to get one number either way.
+ */
+export function entryReps(e) {
+  if (e.reps != null) return Number(e.reps) || 0;
+  return (e.sets || []).reduce((s, x) => s + (Number(x.reps) || 0), 0);
 }
 
-export function totalReps(sets) {
-  return (sets || []).reduce((s, x) => s + (Number(x.reps) || 0), 0);
-}
-
-export function totalVolume(sets) {
-  return (sets || []).reduce((s, x) => s + (Number(x.kg) || 0) * (Number(x.reps) || 0), 0);
+export function entryKg(e) {
+  if (e.kg != null) return Number(e.kg) || 0;
+  return Math.max(0, ...(e.sets || []).map((x) => Number(x.kg) || 0));
 }
 
 export const INTENSITIES = [
