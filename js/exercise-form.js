@@ -78,17 +78,17 @@ export function lastWorkoutDate(date = todayStr()) {
 }
 
 /**
- * `copyFrom`: a date whose exercises pre-fill a day that has no record yet
- * ("지난번과 똑같이"). Copied items carry no id, so saving creates new entries.
+ * `copyFrom`: a date whose exercises pre-fill the sheet ("지난번과 똑같이").
+ * Copied items carry no id, so saving replaces the day with new entries.
  */
 export function openDayForm(date = todayStr(), { copyFrom = null } = {}) {
   const existing = getList('exercises').filter((e) => e.date === date);
   const title = existing.length ? '운동 기록 수정' : date === todayStr() ? '오늘 운동 기록' : '운동 기록 추가';
-  const copying = !existing.length && copyFrom;
+  const copying = !!copyFrom;
   const source = copying
     ? getList('exercises').filter((e) => e.date === copyFrom).map(({ id, memo: _memo, ...rest }) => rest)
     : existing;
-  const prevDay = existing.length ? null : lastWorkoutDate(date);
+  const prevDay = lastWorkoutDate(date);
 
   openEntrySheet(title, (body, close) => {
     const byType = new Map(source.filter((e) => findType(e.typeId).routine).map((e) => [e.typeId, e]));
@@ -97,7 +97,7 @@ export function openDayForm(date = todayStr(), { copyFrom = null } = {}) {
 
     body.innerHTML = `
       <div class="field"><label>날짜</label><input type="date" id="day-date" value="${date}" max="${todayStr()}"></div>
-      <div class="desc">${existing.length ? '이 날짜의 기록을 수정합니다.' : copying ? `${formatDateKr(copyFrom)} 기록을 불러왔어요. 바뀐 값만 고치고 저장하세요.` : '오늘 한 운동을 켜고 값을 확인한 뒤 한 번에 저장하세요.'}</div>
+      <div class="desc">${copying ? `${formatDateKr(copyFrom)} 기록을 불러왔어요. 바뀐 값만 고치고 저장하세요.` : existing.length ? '이 날짜의 기록을 수정합니다.' : '오늘 한 운동을 켜고 값을 확인한 뒤 한 번에 저장하세요.'}</div>
       ${prevDay && !copying ? `<button type="button" class="btn btn-secondary btn-block copy-last" id="copy-last">↺ 지난번과 똑같이 <small>(${formatDateKr(prevDay)})</small></button>` : ''}
 
       <div class="ex-sections">

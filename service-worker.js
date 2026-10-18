@@ -1,4 +1,4 @@
-const CACHE_NAME = 'health-log-v11';
+const CACHE_NAME = 'health-log-v12';
 const APP_SHELL = [
   './',
   './index.html',
@@ -50,21 +50,21 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Network first so a new deploy shows up on the next open; the cache is
+  // only the offline fallback.
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => {
-          if (request.mode === 'navigate') return caches.match('./index.html');
-          return undefined;
-        });
-    })
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(request).then((cached) => {
+        if (cached) return cached;
+        if (request.mode === 'navigate') return caches.match('./index.html');
+        return undefined;
+      }))
   );
 });
