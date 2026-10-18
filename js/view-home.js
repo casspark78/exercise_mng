@@ -1,11 +1,11 @@
 import { getState, getList, getBackupStatus, latestWeight, exerciseKcal } from './state.js';
-import { morningStreak, dailyTotals, dayCardHtml, dayItemsHtml } from './view-exercise.js';
+import { morningStreak, dailyTotals, dayItemsHtml } from './view-exercise.js';
 import { openDayForm } from './exercise-form.js';
 import { openWeightForm, weightChange } from './view-weight.js';
 import { openBpForm, classifyBp } from './view-bp.js';
 import { todayStr, formatDateKr, diffDays, dateToStr, formatMinutes, strToDate } from './utils.js';
 
-export function renderHome(container, { goToTab, openSettings }) {
+export function renderHome(container, { openSettings }) {
   const today = todayStr();
   const { profile } = getState().settings;
   const todayList = getList('exercises').filter((e) => e.date === today);
@@ -53,10 +53,6 @@ export function renderHome(container, { goToTab, openSettings }) {
     </div>
     ${reminderHtml(lw, lastBp)}
 
-    ${todayList.length ? `
-      <div class="section-title">오늘 운동 <a class="action-link" id="go-exercise">전체 보기 ›</a></div>
-      ${dayCardHtml(today, todayList)}` : ''}
-
     ${backupBannerHtml()}
   `;
 
@@ -65,10 +61,6 @@ export function renderHome(container, { goToTab, openSettings }) {
   container.querySelector('#quick-exercise').addEventListener('click', () => openDayForm(today));
   container.querySelector('#quick-weight').addEventListener('click', () => openWeightForm());
   container.querySelector('#quick-bp').addEventListener('click', () => openBpForm());
-  container.querySelector('#go-exercise')?.addEventListener('click', () => goToTab('exercise'));
-  container.querySelectorAll('[data-day]').forEach((el) => {
-    el.addEventListener('click', () => openDayForm(el.dataset.day));
-  });
 }
 
 function greeting() {
