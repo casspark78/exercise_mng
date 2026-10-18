@@ -20,7 +20,6 @@ export function renderHome(container, { goToTab, openSettings }) {
   const bpCls = lastBp ? classifyBp(Number(lastBp.sys), Number(lastBp.dia)) : null;
 
   container.innerHTML = `
-    ${backupBannerHtml()}
 
     <div class="hero-card">
       <div class="hero-row">
@@ -57,6 +56,8 @@ export function renderHome(container, { goToTab, openSettings }) {
     ${todayList.length ? `
       <div class="section-title">오늘 운동 <a class="action-link" id="go-exercise">전체 보기 ›</a></div>
       ${dayCardHtml(today, todayList)}` : ''}
+
+    ${backupBannerHtml()}
   `;
 
   bindHeatmap(container.querySelector('#heatmap-card'), goal);
@@ -153,7 +154,6 @@ function heatmapHtml(goal) {
       <div class="hm-title">${y}년 ${m + 1}월 운동</div>
       <button type="button" class="hm-nav" data-nav="1" aria-label="다음 달" ${monthOffset >= 0 ? 'disabled' : ''}>›</button>
     </div>
-    <div class="hm-grid hm-weekdays">${['월', '화', '수', '목', '금', '토', '일'].map((n) => `<div>${n}</div>`).join('')}</div>
     <div class="hm-grid">${cells.join('')}</div>
     <div class="hm-legend">
       <span>적음</span>${[0, 1, 2, 3, 4].map((l) => `<i class="hm-cell lv${l}"></i>`).join('')}<span>많음</span>
