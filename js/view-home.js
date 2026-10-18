@@ -1,5 +1,6 @@
 import { getState, getList, getBackupStatus, latestWeight, exerciseKcal } from './state.js';
-import { morningStreak, dailyTotals, exerciseRowHtml, openExerciseForm } from './view-exercise.js';
+import { morningStreak, dailyTotals, dayCardHtml } from './view-exercise.js';
+import { openDayForm } from './exercise-form.js';
 import { openWeightForm, weightChange } from './view-weight.js';
 import { openBpForm, classifyBp } from './view-bp.js';
 import { exerciseLabel as findTypeLabel } from './met.js';
@@ -35,7 +36,7 @@ export function renderHome(container, { goToTab, openSettings }) {
           <div class="l">연속</div>
         </div>
       </div>
-      <button class="btn btn-primary btn-block" id="quick-exercise">+ 오늘 운동 기록하기</button>
+      <button class="btn btn-primary btn-block" id="quick-exercise">${todayList.length ? '✏️ 오늘 운동 기록 수정' : '+ 오늘 운동 기록하기'}</button>
     </div>
 
     <div class="card heatmap-card" id="heatmap-card">${heatmapHtml(goal)}</div>
@@ -56,20 +57,17 @@ export function renderHome(container, { goToTab, openSettings }) {
 
     ${todayList.length ? `
       <div class="section-title">오늘 운동 <a class="action-link" id="go-exercise">전체 보기 ›</a></div>
-      <div class="card list-card">${todayList.map(exerciseRowHtml).join('')}</div>` : ''}
+      ${dayCardHtml(today, todayList)}` : ''}
   `;
 
   bindHeatmap(container.querySelector('#heatmap-card'), goal);
   container.querySelector('#backup-banner')?.addEventListener('click', openSettings);
-  container.querySelector('#quick-exercise').addEventListener('click', () => openExerciseForm());
+  container.querySelector('#quick-exercise').addEventListener('click', () => openDayForm(today));
   container.querySelector('#quick-weight').addEventListener('click', () => openWeightForm());
   container.querySelector('#quick-bp').addEventListener('click', () => openBpForm());
   container.querySelector('#go-exercise')?.addEventListener('click', () => goToTab('exercise'));
-  container.querySelectorAll('[data-exercise-id]').forEach((row) => {
-    row.addEventListener('click', () => {
-      const entry = todayList.find((e) => e.id === row.dataset.exerciseId);
-      if (entry) openExerciseForm(entry);
-    });
+  container.querySelectorAll('[data-day]').forEach((el) => {
+    el.addEventListener('click', () => openDayForm(el.dataset.day));
   });
 }
 

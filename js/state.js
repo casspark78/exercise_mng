@@ -64,6 +64,24 @@ export function upsertEntry(kind, data) {
   return entry.id;
 }
 
+/**
+ * Replace every exercise on `date` with `items` in one save, so a day holds
+ * exactly one workout record. Items carrying an existing id keep it, which
+ * keeps re-imports of older backups from duplicating the day.
+ */
+export function replaceDayExercises(date, items) {
+  const prevById = new Map(store.exercises.filter((e) => e.date === date).map((e) => [e.id, e]));
+  const others = store.exercises.filter((e) => e.date !== date);
+  const now = Date.now();
+  const day = items.map((it, i) => {
+    const prev = it.id && prevById.get(it.id);
+    return prev
+      ? { ...it, date, createdAt: prev.createdAt, updatedAt: now }
+      : { ...it, date, id: uid(), createdAt: now + i };
+  });
+  commit('exercises', [...others, ...day]);
+}
+
 export function deleteEntry(kind, id) {
   commit(kind, store[kind].filter((e) => e.id !== id));
 }
