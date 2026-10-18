@@ -187,8 +187,19 @@ function groupedListHtml(list, limit = Infinity) {
 
 const TYPE_ORDER = new Map(EXERCISE_TYPES.map((t, i) => [t.id, i]));
 
+function sortDayItems(dayItems) {
+  return [...dayItems].sort((a, b) => (TYPE_ORDER.get(a.typeId) ?? 99) - (TYPE_ORDER.get(b.typeId) ?? 99));
+}
+
+/** A day's exercise rows plus its memo, in routine order. */
+export function dayItemsHtml(dayItems) {
+  const items = sortDayItems(dayItems);
+  const memo = items.find((e) => e.memo)?.memo;
+  return items.map(exerciseRowHtml).join('') + (memo ? `<div class="day-memo">📝 ${escapeHtml(memo)}</div>` : '');
+}
+
 export function dayCardHtml(date, dayItems) {
-  const items = [...dayItems].sort((a, b) => (TYPE_ORDER.get(a.typeId) ?? 99) - (TYPE_ORDER.get(b.typeId) ?? 99));
+  const items = sortDayItems(dayItems);
   const total = items.reduce((s, e) => s + exerciseKcal(e), 0);
   const memo = items.find((e) => e.memo)?.memo;
   return `

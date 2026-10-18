@@ -1,9 +1,8 @@
 import { getState, getList, getBackupStatus, latestWeight, exerciseKcal } from './state.js';
-import { morningStreak, dailyTotals, dayCardHtml } from './view-exercise.js';
+import { morningStreak, dailyTotals, dayCardHtml, dayItemsHtml } from './view-exercise.js';
 import { openDayForm } from './exercise-form.js';
 import { openWeightForm, weightChange } from './view-weight.js';
 import { openBpForm, classifyBp } from './view-bp.js';
-import { exerciseLabel as findTypeLabel } from './met.js';
 import { todayStr, formatDateKr, diffDays, dateToStr, formatMinutes, strToDate } from './utils.js';
 
 export function renderHome(container, { goToTab, openSettings }) {
@@ -136,13 +135,16 @@ function heatmapHtml(goal) {
   const elapsed = monthOffset === 0 ? now.getDate() : daysInMonth;
   const rate = elapsed ? Math.round((sum.days / elapsed) * 100) : 0;
 
-  let detail = '날짜를 누르면 그날 운동을 볼 수 있어요';
+  let detail = '<div class="hm-hint">날짜를 누르면 그날 운동 내용을 볼 수 있어요</div>';
   if (selectedDate) {
     const t = totals[selectedDate];
-    const names = getList('exercises').filter((e) => e.date === selectedDate).map((e) => findTypeLabel(e));
-    detail = t
-      ? `<b>${formatDateKr(selectedDate)}</b> · ${t.kcal.toLocaleString()} kcal · ${names.join(', ')}`
-      : `<b>${formatDateKr(selectedDate)}</b> · 운동 기록 없음`;
+    const items = getList('exercises').filter((e) => e.date === selectedDate);
+    detail = `
+      <div class="hm-detail-head">
+        <div><b>${formatDateKr(selectedDate)}</b>${t ? `<span>${t.kcal.toLocaleString()} kcal · ${formatMinutes(t.minutes)}</span>` : ''}</div>
+        <button type="button" class="hm-edit" data-edit-day="${selectedDate}">${t ? '수정 ›' : '+ 기록하기'}</button>
+      </div>
+      ${t ? `<div class="hm-detail-list">${dayItemsHtml(items)}</div>` : '<div class="hm-hint">이 날은 운동 기록이 없어요</div>'}`;
   }
 
   return `
@@ -156,7 +158,7 @@ function heatmapHtml(goal) {
     <div class="hm-legend">
       <span>적음</span>${[0, 1, 2, 3, 4].map((l) => `<i class="hm-cell lv${l}"></i>`).join('')}<span>많음</span>
     </div>
-    <div class="hm-detail">${detail}</div>
+    <div class="hm-detail${selectedDate ? ' open' : ''}">${detail}</div>
     <div class="week-sum">
       <span><b>${sum.days}</b>일 운동 <small>(${rate}%)</small></span>
       <span><b>${sum.kcal.toLocaleString()}</b> kcal</span>
@@ -166,6 +168,11 @@ function heatmapHtml(goal) {
 
 function bindHeatmap(card, goal) {
   card.addEventListener('click', (ev) => {
+    const edit = ev.target.closest('[data-edit-day]');
+    if (edit) {
+      openDayForm(edit.dataset.editDay);
+      return;
+    }
     const nav = ev.target.closest('[data-nav]');
     const cell = ev.target.closest('.hm-cell[data-date]');
     if (nav && !nav.disabled) {
