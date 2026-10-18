@@ -1,5 +1,5 @@
 import { getState, getList, exerciseKcal } from './state.js';
-import { EXERCISE_TYPES, INTENSITIES, findType, exerciseLabel, totalReps, totalVolume } from './met.js';
+import { EXERCISE_TYPES, INTENSITIES, findType, exerciseLabel, entryReps, entryKg } from './met.js';
 import { segmentedHtml, bindSegmented, emptyStateHtml, showMoreHtml, PAGE_SIZE } from './components.js';
 import { openDayForm } from './exercise-form.js';
 import { barChart } from './charts.js';
@@ -140,18 +140,8 @@ export function exerciseDetail(e) {
   if (type.kind === 'treadmill') {
     return [e.speedKmh ? `${e.speedKmh}km/h` : '', e.distanceKm ? `${e.distanceKm}km` : '', dur].filter(Boolean).join(' · ');
   }
-  if (type.kind === 'reps') {
-    const sets = e.sets || [];
-    return `${sets.length}세트 · 총 ${totalReps(sets)}회 (${sets.map((x) => x.reps).join('/')})`;
-  }
-  if (type.kind === 'weighted') {
-    const sets = e.sets || [];
-    const same = sets.length && sets.every((x) => x.kg === sets[0].kg && x.reps === sets[0].reps);
-    const detail = same
-      ? `${sets[0].kg}kg × ${sets[0].reps}회 × ${sets.length}세트`
-      : sets.map((x) => `${x.kg}×${x.reps}`).join(', ');
-    return `${detail} · 볼륨 ${totalVolume(sets).toLocaleString()}kg`;
-  }
+  if (type.kind === 'reps') return `${entryReps(e)}회 · ${dur}`;
+  if (type.kind === 'weighted') return `${entryKg(e)}kg × ${entryReps(e)}회 · ${dur}`;
   return [
     dur,
     e.distanceKm ? `${e.distanceKm}km` : '',

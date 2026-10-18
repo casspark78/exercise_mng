@@ -810,14 +810,10 @@ button, input, select, textarea {
 .type-tile.active { border-color: var(--primary); background: rgba(61, 139, 253, 0.14); }
 .type-tile.active .tn { color: var(--primary); }
 
-/* Set rows */
-.kind-sets { margin-top: 14px; }
+/* Compact inputs (기타 운동 rows) */
 .sets-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
 .sets-head label { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
 .sets-head span { font-size: 12px; font-weight: 700; color: var(--primary); }
-.set-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.set-no { width: 44px; flex-shrink: 0; font-size: 13px; font-weight: 700; color: var(--text-secondary); }
-.set-x { color: var(--text-tertiary); font-weight: 700; }
 .set-input {
   flex: 1;
   display: flex;
