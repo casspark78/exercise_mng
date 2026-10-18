@@ -122,7 +122,7 @@ function weekDotsHtml() {
     const state = t?.morning ? 'morning' : t ? 'done' : d > today ? 'future' : '';
     return `<div class="wd ${state}${d === today ? ' today' : ''}"><div class="dot">${t?.morning ? '☀️' : t ? '✓' : ''}</div><div class="n">${n}</div></div>`;
   }).join('')}</div>
-  <div class="desc" style="text-align:center;margin-top:6px;">☀️ 아침(12시 이전) 운동 · ✓ 그 외 시간 운동</div>`;
+  <div class="desc" style="text-align:center;margin-top:6px;">☀️ 운동한 날</div>`;
 }
 
 function reminderHtml(lw, lastBp) {

@@ -9,14 +9,16 @@ import {
 } from './components.js';
 import { barChart } from './charts.js';
 import {
-  todayStr, nowTimeStr, formatDateKr, escapeHtml, addDays, weekStart, formatMonthDay, formatMinutes, strToDate,
+  todayStr, formatDateKr, escapeHtml, addDays, weekStart, formatMonthDay, formatMinutes, strToDate,
 } from './utils.js';
 
 let chartMode = 'day';
 let shown = PAGE_SIZE;
 
+// Exercises are logged without a start time (it's a morning-workout log),
+// so an entry counts as morning unless an older record says otherwise.
 export function isMorning(entry) {
-  return !!entry.time && entry.time < '12:00';
+  return !entry.time || entry.time < '12:00';
 }
 
 /** Totals per date: { 'YYYY-MM-DD': { kcal, minutes, count } } */
@@ -167,12 +169,12 @@ export function exerciseDetail(e) {
 export function exerciseRowHtml(e) {
   const type = findType(e.typeId);
   const kcal = exerciseKcal(e);
-  const meta = [e.time, exerciseDetail(e)].filter(Boolean).join(' · ');
+  const meta = exerciseDetail(e);
   return `
     <div class="list-row" data-exercise-id="${e.id}">
       <div class="row-icon">${type.icon}</div>
       <div class="info">
-        <div class="main">${escapeHtml(exerciseLabel(e))}${isMorning(e) ? ' <span class="tag">아침</span>' : ''}</div>
+        <div class="main">${escapeHtml(exerciseLabel(e))}</div>
         <div class="sub">${escapeHtml(meta)}</div>
         ${e.memo ? `<div class="memo">${escapeHtml(e.memo)}</div>` : ''}
       </div>
@@ -235,7 +237,6 @@ export function openExerciseForm(entry = null) {
   const initialType = entry?.typeId || lastUsedType();
   const e = entry || {
     date: todayStr(),
-    time: nowTimeStr(),
     typeId: initialType,
     intensity: 'normal',
     ...defaultsFor(initialType),
@@ -265,10 +266,7 @@ export function openExerciseForm(entry = null) {
         <div class="field"><label>MET 값</label><input type="number" id="ex-custom-met" inputmode="decimal" step="0.1" min="1" max="20" value="${e.customMet || 4}"></div>
       </div>
 
-      <div class="field-row">
-        <div class="field"><label>날짜</label><input type="date" id="ex-date" value="${e.date}"></div>
-        <div class="field"><label>시작 시간</label><input type="time" id="ex-time" value="${e.time || ''}"></div>
-      </div>
+      <div class="field"><label>날짜</label><input type="date" id="ex-date" value="${e.date}"></div>
 
       <div class="field-row three kind-treadmill">
         <div class="field"><label>속도 (km/h)</label><input type="number" id="ex-speed" inputmode="decimal" step="0.1" min="1" max="25" value="${e.speedKmh ?? ''}"></div>
@@ -366,7 +364,6 @@ export function openExerciseForm(entry = null) {
       const k = kind();
       const v = {
         date: $('#ex-date').value,
-        time: $('#ex-time').value,
         typeId,
         intensity: segmentedValue(body, 'intensity') || 'normal',
         memo: $('#ex-memo').value.trim(),
