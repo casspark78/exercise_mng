@@ -7,7 +7,7 @@ export const EXERCISE_TYPES = [
   // 자주 하는 운동 (전용 입력 화면)
   { id: 'treadmill', name: '런닝머신', icon: '🏃', met: 6.0, kind: 'treadmill', category: '유산소', routine: true },
   { id: 'situp', name: '윗몸 일으키기', icon: '🧘', met: 3.8, kind: 'reps', category: '근력 · 복부', routine: true },
-  { id: 'bench', name: '벤치프레스', icon: '🏋️', met: 5.0, kind: 'weighted', category: '근력 · 가슴', routine: true },
+  { id: 'bench', name: '버터플라이', icon: '🦋', met: 5.0, kind: 'weighted', category: '근력 · 가슴', routine: true },
   { id: 'dumbbell', name: '덤벨', icon: '💪', met: 3.5, kind: 'weighted', category: '근력 · 팔', routine: true },
   // 기타 운동 (시간 기반)
   { id: 'walk', name: '걷기', icon: '🚶', met: 3.5, distance: true },
